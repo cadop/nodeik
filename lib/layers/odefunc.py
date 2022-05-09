@@ -6,7 +6,6 @@ import torch.nn.functional as F
 import time
 
 from . import diffeq_layers
-from .squeeze import squeeze, unsqueeze
 
 __all__ = ["ODEnetSuhan", "ODEfuncSuhan"]
 
