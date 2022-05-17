@@ -6,6 +6,9 @@
 - matplotlib
 - sklearn
 - torchdiffeq
+- urdfpy
+- warp-lang
+- usd-core
 
 ## References
 - SoftFlow: https://github.com/ANLGBOY/SoftFlow
