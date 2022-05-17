@@ -7,6 +7,7 @@ import numpy as np
 import warp as wp
 import warp.sim
 import warp.sim.render
+import urdf_loader
 
 wp.init()
 
@@ -46,7 +47,10 @@ class Robot:
 
         self.num_envs = num_envs
 
-        wp.sim.parse_urdf(os.path.join(os.path.dirname(__file__), "panda_arm.urdf"), builder,
+        # wp.sim.parse_urdf(
+        urdf_loader.parse_urdf(
+            os.path.join(os.path.dirname(__file__), "panda_arm.urdf"), 
+            builder,
             xform=wp.transform(np.array((0, 0.0, 0.0)), wp.quat_from_axis_angle((1.0, 0.0, 0.0), -math.pi*0.5)),
             floating=False, 
             density=0,
@@ -191,5 +195,5 @@ class Robot:
         self.renderer.save()
         
 
-robot = Robot(render=True, device=wp.get_preferred_device(), num_envs=1)
+robot = Robot(render=False, device=wp.get_preferred_device(), num_envs=1)
 robot.run()
