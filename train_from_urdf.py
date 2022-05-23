@@ -158,24 +158,6 @@ class Learner(pl.LightningModule):
         loss = -torch.mean(logpx)
 
         return {'loss': loss} 
-
-    def validation_step(self, batch, batch_idx):
-
-        self.iters += 1
-        x= batch
-        
-        zero = torch.zeros(x.shape[0], 1).to(x)
-
-        c = x[:, 7:]
-        x = x[:, :7]
-
-        z, delta_logp = model(x, c, zero)
-
-        logpz = standard_normal_logprob(z).sum(1, keepdim=True)
-
-        logpx = logpz - delta_logp
-        loss = -torch.mean(logpx)
-        self.log("val_loss", loss)
         
     def configure_optimizers(self):
         return torch.optim.AdamW(self.model.parameters(), lr=2e-3, weight_decay=1e-5)
@@ -188,5 +170,5 @@ if __name__ == '__main__':
 
     model = build_model_tabular_suhan(args, 7).to(device)
     learn = Learner(model)
-    trainer = pl.Trainer(max_epochs=1000,accelerator='gpu', devices=1)
+    trainer = pl.Trainer(max_epochs=1000000000,accelerator='gpu', devices=1)
     trainer.fit(learn)
