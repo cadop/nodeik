@@ -1,7 +1,7 @@
 # NODE IK: Neural ODE Inverse Kinematics
 
 ## Requirements
-- python > 3.6.10
+- python >= 3.7
 - pytorch 1.0.1
 - matplotlib
 - sklearn
@@ -9,6 +9,7 @@
 - urdfpy
 - warp-lang
 - usd-core
+- pytorch_lightning
 
 ## References
 - SoftFlow: https://github.com/ANLGBOY/SoftFlow
