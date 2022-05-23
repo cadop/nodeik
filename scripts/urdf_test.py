@@ -1,3 +1,4 @@
+# SH Park: This is deprecated (May 23 2022)
 
 import os
 import math
@@ -51,7 +52,7 @@ class Robot:
         urdf_loader.parse_urdf(
             os.path.join(os.path.dirname(__file__), "panda_arm.urdf"), 
             builder,
-            xform=wp.transform(np.array((0, 0.0, 0.0)), wp.quat_from_axis_angle((1.0, 0.0, 0.0), -math.pi*0.5)),
+            xform=wp.transform(np.array((0, 0.0, 0.0)), wp.quat_from_axis_angle((1.0, 0.0, 0.0), 0.0)),
             floating=False, 
             density=0,
             armature=0.1,
@@ -160,6 +161,12 @@ class Robot:
         self.state.body_q.requires_grad = True
 
         self.loss = wp.zeros(1, dtype=float, device=self.device)
+        print(self.model.joint_limit_lower)
+        print(self.model.joint_limit_upper)
+        print(self.model.joint_q)
+        # print(self.model.links[0].name)
+        # self.model.joint_q[3] += -math.pi/2
+        self.model.joint_q = wp.array([0.0, 0.0, 0.0, -math.pi/2,0.0,math.pi/2,math.pi/4,0],device=self.device, dtype=float)
 
         for i in range(train_iters):
 
@@ -173,26 +180,33 @@ class Robot:
                     None,
                     self.state)
 
-                wp.launch(compute_loss, dim=1, inputs=[self.state.body_q, len(self.state.body_q)-1, self.loss], device=self.device)
+            k = self.state.body_q.numpy()
 
-            tape.backward(loss=self.loss)
+            print(k)
+            fdas
+            # print(k[-1])
+            # print('---------------------')  
+                # wp.launch(compute_loss, dim=1, inputs=[self.state.body_q, len(self.state.body_q)-1, self.loss], device=self.device)
 
-            print(self.loss)
-            print(tape.gradients[self.model.joint_q])
+            # tape.backward(loss=self.loss)
+
+        #     print(' l',self.loss)
+        #     print('dq',tape.gradients[self.model.joint_q])
+        #     print(' q', self.model.joint_q)
             
-            # gradient descent
-            wp.launch(step_kernel, dim=len(self.model.joint_q), inputs=[self.model.joint_q, tape.gradients[self.model.joint_q], train_rate], device=self.device)
+        #     # gradient descent
+        #     wp.launch(step_kernel, dim=len(self.model.joint_q), inputs=[self.model.joint_q, tape.gradients[self.model.joint_q], train_rate], device=self.device)
 
-            # render
-            self.renderer.begin_frame(render_time)
-            self.renderer.render(self.state)
-            self.renderer.render_sphere(name="target", pos=TARGET.val, rot=wp.quat_identity(), radius=0.1)
-            self.renderer.end_frame()
+        #     # render
+        #     self.renderer.begin_frame(render_time)
+        #     self.renderer.render(self.state)
+        #     self.renderer.render_sphere(name="target", pos=TARGET.val, rot=wp.quat_identity(), radius=0.1)
+        #     self.renderer.end_frame()
 
 
-            render_time += 1.0/60.0
+        #     render_time += 1.0/60.0
 
-        self.renderer.save()
+        # self.renderer.save()
         
 
 robot = Robot(render=False, device=wp.get_preferred_device(), num_envs=1)
