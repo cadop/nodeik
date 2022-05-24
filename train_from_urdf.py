@@ -164,9 +164,8 @@ class Learner(pl.LightningModule):
         return self.dataloader
 
 
-def get_robot():
+def get_robot(filepath):
 
-    filepath = os.path.join(os.path.dirname(__file__), 'assets', 'robots', 'panda_arm.urdf')
     r = Robot(robot_path=filepath)
     qx = r.get_pair()
 
@@ -177,8 +176,9 @@ def get_robot():
 
 
 def run():
+    filepath = os.path.join(os.path.dirname(__file__), 'assets', 'robots', 'panda_arm.urdf')
 
-    r, dataloader = get_robot()
+    r, dataloader = get_robot(filepath)
     model = build_model_tabular_suhan(args, 7).to(device)
     learn = Learner(model, dataloader)
 
