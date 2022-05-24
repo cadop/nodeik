@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import os
 import time
 import pickle
@@ -21,31 +22,28 @@ import warp.sim
 import warp.sim.render
 from lib.warp.urdf_loader import parse_urdf
 
-SOLVERS = ["dopri5"]
-parser = argparse.ArgumentParser('NodeIK')
-parser.add_argument("--layer_type", type=str, default="concatsquash", choices=["concatsquash"])
-parser.add_argument('--dims', type=str, default='64-64-64')
-parser.add_argument("--num_blocks", type=int, default=1, help='Number of stacked CNFs.')
-parser.add_argument('--time_length', type=float, default=0.5)
-parser.add_argument('--train_T', type=eval, default=False)
-parser.add_argument("--divergence_fn", type=str, default="brute_force", choices=["brute_force", "approximate"])
-parser.add_argument("--nonlinearity", type=str, default="tanh")
 
-parser.add_argument('--solver', type=str, default='dopri5', choices=SOLVERS)
-parser.add_argument('--atol', type=float, default=1e-5)
-parser.add_argument('--rtol', type=float, default=1e-5)
-
-parser.add_argument('--rademacher', type=eval, default=False, choices=[True, False])
-parser.add_argument('--gpu', type=int, default=0)
-
-args = parser.parse_args([])
+@dataclass
+class args:
+    layer_type = 'concatsquash'
+    dims = '64-64-64'
+    num_blocks = 1 
+    time_length = 0.5
+    train_T = False
+    divergence_fn = 'brute_force'
+    nonlinearity = 'tanh'
+    solver = 'dopri5'
+    atol = 1e-5
+    rtol = 1e-5
+    gpu = 0
+    rademacher = False
 
 device = torch.device('cuda:' + str(args.gpu) if torch.cuda.is_available() else 'cpu')
 
 wp.init()
 
 class Robot():
-    def __init__(self, render=True, num_envs=1, device='cpu', urdf='panda_arm.urdf',start_joint_index=0, end_joint_index=7):
+    def __init__(self, render=True, num_envs=1, device='cpu', robot_path='panda_arm.urdf',start_joint_index=0, end_joint_index=7):
         builder = wp.sim.ModelBuilder()
 
         self.device = device
@@ -58,9 +56,10 @@ class Robot():
         print("It should be nodeik dir")
 
         # change the current working directory (URDF load trick)
-        os.chdir('{}/assets/robots'.format(cwd))
+        # os.chdir('{}/assets/robots'.format(cwd)) # Not a good trick because it doesn't work, just load the file relative to script
+
         parse_urdf(
-            os.path.join(os.path.dirname(__file__), urdf), 
+            robot_path, 
             builder,
             xform=wp.transform(np.array((0, 0.0, 0.0)), wp.quat_from_axis_angle((1.0, 0.0, 0.0), 0.0)),
             floating=False, 
@@ -110,9 +109,8 @@ class Robot():
 
         return qx
 
-r = Robot('assets/robots/panda/panda_arm.urdf')
 
-qx = r.get_pair()
+
 
 class KinematicsDataset(Dataset):
     def __init__(self, robot, len_batch= 4096):
@@ -126,13 +124,13 @@ class KinematicsDataset(Dataset):
     def __len__(self):
         return self.len_batch
     
-dataset = KinematicsDataset(r)
-dataloader = DataLoader(dataset, batch_size=4096)
+
 
 class Learner(pl.LightningModule):
-    def __init__(self, model:nn.Module):
+    def __init__(self, model:nn.Module, dataloader):
         super().__init__()
         self.model = model
+        self.dataloader = dataloader
         self.iters = 0
         
     def forward(self, x):
@@ -150,7 +148,7 @@ class Learner(pl.LightningModule):
         c = x[:, 7:]
         x = x[:, :7]
 
-        z, delta_logp = model(x, c, zero)
+        z, delta_logp = self.model(x, c, zero)
 
         logpz = standard_normal_logprob(z).sum(1, keepdim=True)
 
@@ -163,12 +161,32 @@ class Learner(pl.LightningModule):
         return torch.optim.AdamW(self.model.parameters(), lr=2e-3, weight_decay=1e-5)
 
     def train_dataloader(self):
-        return dataloader
+        return self.dataloader
+
+
+def get_robot():
+
+    filepath = os.path.join(os.path.dirname(__file__), 'assets', 'robots', 'panda_arm.urdf')
+    r = Robot(robot_path=filepath)
+    qx = r.get_pair()
+
+    dataset = KinematicsDataset(r)
+    dataloader = DataLoader(dataset, batch_size=4096)
+    
+    return r, dataloader
+
+
+def run():
+
+    r, dataloader = get_robot()
+    model = build_model_tabular_suhan(args, 7).to(device)
+    learn = Learner(model, dataloader)
+
+    trainer = pl.Trainer(max_epochs=1000000000,accelerator='gpu', devices=1)
+    trainer.fit(learn)
 
 
 if __name__ == '__main__':
 
-    model = build_model_tabular_suhan(args, 7).to(device)
-    learn = Learner(model)
-    trainer = pl.Trainer(max_epochs=1000000000,accelerator='gpu', devices=1)
-    trainer.fit(learn)
+    run()
+    

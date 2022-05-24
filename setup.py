@@ -22,6 +22,6 @@ setuptools.setup(
     classifiers=[
         "Operating System :: OS Independent",
     ],
-    install_requires=["numpy", "warp-lang", 'usd-core', 'urdfpy'],
+    install_requires=["numpy", "warp-lang", 'usd-core', 'urdfpy', 'pytorch_lightning','torchdiffeq'],
     python_requires=">=3.7"
 )
