@@ -7,15 +7,13 @@ import time
 
 from . import diffeq_layers
 
-__all__ = ["ODEnetSuhan", "ODEfuncSuhan"]
-
+__all__ = ["ODEnet", "ODEfunc"]
 
 def divergence_bf(dx, y, **unused_kwargs):
     sum_diag = 0.
     for i in range(y.shape[1]):
         sum_diag += torch.autograd.grad(dx[:, i].sum(), y, create_graph=True)[0].contiguous()[:, i].contiguous()
     return sum_diag.contiguous()
-
 
 def divergence_approx(f, y, e=None):
     e_dzdx = torch.autograd.grad(f, y, e, create_graph=True)[0]
@@ -63,7 +61,7 @@ NONLINEARITIES = {
 }
 
 
-class ODEnetSuhan(nn.Module):
+class ODEnet(nn.Module):
     """
     Helper class to make neural nets for use in continuous normalizing flows
     """
@@ -71,7 +69,7 @@ class ODEnetSuhan(nn.Module):
     def __init__(
         self, hidden_dims, input_shape, strides, conv, layer_type="concatsquash", nonlinearity="softplus", num_squeeze=0
     ):
-        super(ODEnetSuhan, self).__init__()
+        super(ODEnet, self).__init__()
         self.num_squeeze = num_squeeze
         if conv:
             assert len(strides) == len(hidden_dims) + 1
@@ -119,31 +117,24 @@ class ODEnetSuhan(nn.Module):
     def forward(self, tc, y):
         dx = y
         # squeeze
-        _t1 = time.time()
-
-        for _ in range(self.num_squeeze):
-            dx = squeeze(dx, 2)
-        _t2 = time.time()
+        # _t1 = time.time()
+        # _t2 = time.time()
         for l, layer in enumerate(self.layers):
             dx = layer(tc, dx)
             # if not last layer, use nonlinearity
             if l < len(self.layers) - 1:
                 dx = self.activation_fns[l](dx)
 
-        _t3 = time.time()
-        # unsqueeze
-        for _ in range(self.num_squeeze):
-            dx = unsqueeze(dx, 2)
-
-        _t4 = time.time()
+        # _t3 = time.time()
+        # _t4 = time.time()
         # print('sub times:',(_t2-_t1)*1000,(_t3-_t2)*1000,(_t4-_t3)*1000)
         return dx
 
 
-class ODEfuncSuhan(nn.Module):
+class ODEfunc(nn.Module):
 
     def __init__(self, diffeq, divergence_fn="approximate", rademacher=False):
-        super(ODEfuncSuhan, self).__init__()
+        super(ODEfunc, self).__init__()
         assert divergence_fn in ("brute_force", "approximate")
 
         # self.diffeq = diffeq_layers.wrappers.diffeq_wrapper(diffeq)

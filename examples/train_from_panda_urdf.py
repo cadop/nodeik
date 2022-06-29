@@ -1,26 +1,18 @@
 from dataclasses import dataclass
+
 import os
 
-import numpy as np
-
 import torch
-import torch.optim as optim
-from torch.utils.data import Dataset, DataLoader
-import torch.nn as nn
+from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 
-import lib.utils as utils
-from lib.utils import standard_normal_logprob
-from lib.utils import build_model_tabular_suhan
+from nodeik.utils import build_model
 
 import warp as wp
-import warp.sim
-import warp.sim.render
-from lib.warp.urdf_loader import parse_urdf
 
-from robot import Robot
-from datasets import KinematicsDataset
-from learner import Learner
+from nodeik.robots.robot import Robot
+from nodeik.training.datasets import KinematicsDataset
+from nodeik.training.learner import Learner
 
 
 @dataclass
@@ -56,7 +48,7 @@ def run():
     filepath = os.path.join(os.path.dirname(__file__), 'assets', 'robots','franka_panda', 'panda_arm.urdf')
 
     r, dataloader = get_robot(filepath)
-    model = build_model_tabular_suhan(args, 7).to(device)
+    model = build_model(args, 7).to(device)
     learn = Learner(model, dataloader)
 
     trainer = pl.Trainer(max_epochs=1000000000,accelerator='gpu', devices=1)

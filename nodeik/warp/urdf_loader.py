@@ -171,7 +171,7 @@ def parse_urdf(
             builder, root, robot.links[0].collisions, 0.0, shape_ke, shape_kd, shape_kf, shape_mu)
 
     link_index[robot.links[0].name] = root
-
+    
     # add children
     for joint in robot.joints:
 
@@ -246,3 +246,5 @@ def parse_urdf(
 
         # add ourselves to the index
         link_index[joint.child] = link
+
+    print('link_index', link_index)

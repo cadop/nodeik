@@ -4,18 +4,9 @@ from numbers import Number
 import logging
 import six
 import math
-import lib.layers as layers
+import nodeik.layers as layers
 import torch
 
-def makedirs(dirname):
-    if not os.path.exists(dirname):
-        os.makedirs(dirname)
-
-def save_checkpoint(state, save, epoch):
-    if not os.path.exists(save):
-        os.makedirs(save)
-    filename = os.path.join(save, 'checkpt-%04d.pth' % epoch)
-    torch.save(state, filename)
 
 def isnan(tensor):
     return (tensor != tensor)
@@ -79,12 +70,12 @@ def count_total_time(model):
     return accumulator.total_time
 
 
-def build_model_tabular_suhan(args, dims, regularization_fns=[]):
+def build_model(args, dims, regularization_fns=[]):
 
     hidden_dims = tuple(map(int, args.dims.split("-")))
 
     def build_cnf():
-        diffeq = layers.ODEnetSuhan(
+        diffeq = layers.ODEnet(
             hidden_dims=hidden_dims,
             input_shape=(dims,),
             strides=None,
@@ -92,12 +83,12 @@ def build_model_tabular_suhan(args, dims, regularization_fns=[]):
             layer_type=args.layer_type,
             nonlinearity=args.nonlinearity,
         )
-        odefunc = layers.ODEfuncSuhan(
+        odefunc = layers.ODEfunc(
             diffeq=diffeq,
             divergence_fn=args.divergence_fn,
             rademacher=args.rademacher,
         )
-        cnf = layers.CCNFSuhan(
+        cnf = layers.CCNF(
             odefunc=odefunc,
             T=args.time_length,
             train_T=args.train_T,

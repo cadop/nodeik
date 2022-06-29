@@ -3,7 +3,7 @@ import torch.nn as nn
 
 import pytorch_lightning as pl
 
-from lib.utils import standard_normal_logprob
+from nodeik.utils import standard_normal_logprob
 
 class Learner(pl.LightningModule):
     def __init__(self, model:nn.Module, dataloader):
@@ -33,6 +33,14 @@ class Learner(pl.LightningModule):
 
         logpx = logpz - delta_logp
         loss = -torch.mean(logpx)
+
+
+        z2 = torch.normal(mean=0.0, std=1.0, size=(c.shape[0],7)).to(x)
+        # print('x',x )
+        # print(x.shape, c.shape, zero.shape)
+        ik_q, delta_logp = self.model(z2, c, zero, reverse=True)
+        ik_q = ik_q.cpu().detach().numpy()
+
 
         return {'loss': loss} 
         
