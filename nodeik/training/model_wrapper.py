@@ -6,11 +6,13 @@ import pytorch_lightning as pl
 from nodeik.utils import standard_normal_logprob
 
 class ModelWrapper:
-    def __init__(self, model, robot, device, std=1.0):
+    def __init__(self, model, robot, device, std=1.0, dim_x = 7, dim_c = 7):
         self.model = model
         self.robot = robot
         self.device = device
         self.std = std
+        self.dim_c = dim_c
+        self.dim_x = dim_x
 
     def inverse_kinematics(self, pose, num_samples=1):
         
@@ -25,9 +27,9 @@ class ModelWrapper:
 
         zero = torch.zeros(c.shape[0], 1).to(device)
         c = torch.from_numpy(c).to(device)
-        x = torch.normal(mean=0.0, std=self.std, size=(c.shape[0],7)).to(device)
+        x = torch.normal(mean=0.0, std=self.std, size=(c.shape[0],self.dim_x)).to(device)
         # import pdb; pdb.set_trace()
-        ik_q, delta_logp = self.model(x,c,zero, reverse=True)
+        ik_q, delta_logp = self.model(x,c,zero, rev=True)
         ik_q = ik_q.cpu().detach().numpy()
 
         return ik_q, delta_logp

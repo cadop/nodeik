@@ -42,8 +42,8 @@ def get_robot(filepath):
 
     r = Robot(robot_path=filepath)
     
-    val_size = 750  
-    dataset = KinematicsDataset(r, len_batch=4096*500)
+    val_size = 1000  
+    dataset = KinematicsDataset(r, len_batch=4096*2000)
     val_dataset = KinematicsDataset(r, len_batch=val_size)
     dataloader = DataLoader(dataset, batch_size=4096)
     val_dataloader = DataLoader(val_dataset, batch_size=val_size)
@@ -61,7 +61,7 @@ def run():
     # learn = Learner.load_from_checkpoint(args.model_checkpoint, model=model, robot=r, std=0.5)
     #epoch=158400-step=158401.ckpt
 
-    wandb_logger = WandbLogger(project="node-ik", name='1024-4-gpuserver2', log_model='all')
+    wandb_logger = WandbLogger(project="node-ik", name='1024-4', log_model='all')
     print(wandb_logger.version)
     print(wandb_logger)
     trainer = pl.Trainer(max_epochs=1000000000,accelerator='gpu', gpus=[0], logger=wandb_logger, check_val_every_n_epoch=1, log_every_n_steps=10, default_root_dir='/home/ubuntu/sh_ws/nodeik/checkpoints')

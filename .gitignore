@@ -2,3 +2,8 @@ __pycache__
 *.pyc
 venv_nodeik
 scripts/warp
+build
+.vscode
+checkpoints
+examples/wandb
+lightning_logs

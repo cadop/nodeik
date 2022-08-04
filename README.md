@@ -10,6 +10,7 @@
 - warp-lang
 - usd-core
 - pytorch_lightning
+- pyquaternion
 
 ## References
 - SoftFlow: https://github.com/ANLGBOY/SoftFlow

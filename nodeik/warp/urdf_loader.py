@@ -18,6 +18,7 @@ import xml.etree.ElementTree as ET
 
 import warp as wp
 # import warp.sim as wpsim
+from warp.utils import quat_multiply
 
 
 def urdf_add_collision(builder, link, collisions, density, shape_ke, shape_kd, shape_kf, shape_mu):
@@ -66,7 +67,7 @@ def urdf_add_collision(builder, link, collisions, density, shape_ke, shape_kd, s
             builder.add_shape_capsule(
                 link,
                 pos,
-                wp.quat_multiply(rot, r),
+                quat_multiply(rot, r),
                 geo.cylinder.radius,
                 geo.cylinder.length*0.5,
                 density,
@@ -173,6 +174,7 @@ def parse_urdf(
     link_index[robot.links[0].name] = root
     
     # add children
+    q_index = 0
     for joint in robot.joints:
 
         type = None
@@ -181,6 +183,8 @@ def parse_urdf(
         if joint.joint_type == "revolute" or joint.joint_type == "continuous":
             type = wp.sim.JOINT_REVOLUTE
             axis = joint.axis
+            print(q_index, joint.name)
+            q_index += 1
         if joint.joint_type == "prismatic":
             type = wp.sim.JOINT_PRISMATIC
             axis = joint.axis
@@ -248,3 +252,4 @@ def parse_urdf(
         link_index[joint.child] = link
 
     print('link_index', link_index)
+    return link_index

@@ -67,7 +67,7 @@ class ODEnet(nn.Module):
     """
 
     def __init__(
-        self, hidden_dims, input_shape, strides, conv, layer_type="concatsquash", nonlinearity="softplus", num_squeeze=0
+        self, hidden_dims, input_shape, strides, conv, layer_type="concatsquash", nonlinearity="softplus", num_squeeze=0, dim_c = 7
     ):
         super(ODEnet, self).__init__()
         self.num_squeeze = num_squeeze
@@ -99,7 +99,7 @@ class ODEnet(nn.Module):
             else:
                 raise ValueError('Unsupported stride: {}'.format(stride))
 
-            layer = base_layer(hidden_shape[0], dim_out, dim_c=7, **layer_kwargs)
+            layer = base_layer(hidden_shape[0], dim_out, dim_c=dim_c, **layer_kwargs)
             layers.append(layer)
             activation_fns.append(NONLINEARITIES[nonlinearity])
 
@@ -168,7 +168,6 @@ class ODEfunc(nn.Module):
         self._num_evals += 1
 
         # convert to tensor
-        t = torch.ones(y.size(0), 1).to(y) * t.clone().detach().requires_grad_(True).type_as(y)
         batchsize = y.shape[0]
 
         # Sample and fix the noise.
@@ -179,34 +178,39 @@ class ODEfunc(nn.Module):
                 self._e = sample_gaussian_like(y)
 
         _t2 = time.time()
-        with torch.set_grad_enabled(True):
-            y.requires_grad_(True)
-            c.requires_grad_(True)
-            t.requires_grad_(True)
-            for s_ in states[3:]:
-                s_.requires_grad_(True)
+
+        if self.calc_density:
+            t = torch.ones(y.size(0), 1).to(y) * t.clone().detach().requires_grad_(True).type_as(y)
+            with torch.set_grad_enabled(True):
+                y.requires_grad_(True)
+                c.requires_grad_(True)
+                t.requires_grad_(True)
+                for s_ in states[3:]:
+                    s_.requires_grad_(True)
+                    
+                tc = torch.cat([t, c.view(y.shape[0], -1)], dim=1)
                 
+                dy = self.diffeq(tc, y, *states[3:])
+                divergence = self.divergence_fn(dy, y, e=self._e).view(batchsize, 1)
+                # if self.calc_density is True:
+                #     # print('calc dnesioty')
+                #     # Hack for 2D data to use brute force divergence computation.
+                #     if not self.training and dy.view(dy.shape[0], -1).shape[1] == 2:
+                #         divergence = divergence_bf(dy, y).view(batchsize, 1)
+                #     else:
+                #         divergence = self.divergence_fn(dy, y, e=self._e).view(batchsize, 1)
+                # else: 
+                #     divergence = torch.zeros_like(c[:,0]).requires_grad_(True)
+                    # print('not calc dnesioty')
+                # print('divergence.shape',divergence.shape)
+            return tuple([dy, torch.zeros_like(c).requires_grad_(True), -divergence] + [torch.zeros_like(s_).requires_grad_(True) for s_ in states[3:]])
+
+        else:
+            t = torch.ones(y.size(0), 1).to(y) * t.clone().detach().type_as(y)
             tc = torch.cat([t, c.view(y.shape[0], -1)], dim=1)
-            # print('[{0}]'.format(__name__), ': t.shape ', t.shape)
-            # print('[{0}]'.format(__name__), ': c.shape ', c.shape)
-            # print('[{0}]'.format(__name__), ': tc.shape ', tc.shape)
-
-            
             dy = self.diffeq(tc, y, *states[3:])
+            divergence = torch.zeros_like(c[:,0])
 
-            _t3 = time.time()
-            if self.calc_density is True:
-                # print('calc dnesioty')
-                # Hack for 2D data to use brute force divergence computation.
-                if not self.training and dy.view(dy.shape[0], -1).shape[1] == 2:
-                    divergence = divergence_bf(dy, y).view(batchsize, 1)
-                else:
-                    divergence = self.divergence_fn(dy, y, e=self._e).view(batchsize, 1)
-            else: 
-                divergence = torch.zeros_like(c[:,0]).requires_grad_(True)
-                # print('not calc dnesioty')
-            # print('divergence.shape',divergence.shape)
-            _t4 = time.time()
+            return tuple([dy, torch.zeros_like(c), -divergence] + [torch.zeros_like(s_) for s_ in states[3:]])
 
         # print('times:',(_t2-_t1)*1000,(_t3-_t2)*1000,(_t4-_t3)*1000)
-        return tuple([dy, torch.zeros_like(c).requires_grad_(True), -divergence] + [torch.zeros_like(s_).requires_grad_(True) for s_ in states[3:]])

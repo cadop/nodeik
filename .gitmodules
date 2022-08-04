@@ -1,0 +1,3 @@
+[submodule "examples/assets/robots"]
+	path = examples/assets/robots
+	url = https://github.com/psh117/robots

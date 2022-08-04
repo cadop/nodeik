@@ -32,7 +32,7 @@ class CCNF(nn.Module):
         self.test_rtol = rtol
         self.solver_options = {}
 
-    def forward(self, z, c, logpz=None, integration_times=None, reverse=False):
+    def forward(self, z, c, logpz=None, integration_times=None, rev=False):
         if logpz is None:
             _logpz = torch.zeros(z.shape[0], 1).to(z)
         else:
@@ -40,7 +40,7 @@ class CCNF(nn.Module):
 
         if integration_times is None:
             integration_times = torch.tensor([0.0, self.sqrt_end_time * self.sqrt_end_time]).to(z)
-        if reverse:
+        if rev:
             integration_times = _flip(integration_times, 0)
 
         # Refresh the odefunc statistics.

@@ -70,7 +70,7 @@ def count_total_time(model):
     return accumulator.total_time
 
 
-def build_model(args, dims, regularization_fns=[]):
+def build_model(args, dims, condition_dims, regularization_fns=[]):
 
     hidden_dims = tuple(map(int, args.dims.split("-")))
 
@@ -82,6 +82,7 @@ def build_model(args, dims, regularization_fns=[]):
             conv=False,
             layer_type=args.layer_type,
             nonlinearity=args.nonlinearity,
+            dim_c=condition_dims,
         )
         odefunc = layers.ODEfunc(
             diffeq=diffeq,
