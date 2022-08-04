@@ -189,18 +189,18 @@ class Learner(pl.LightningModule):
             if x_out.shape[1] == 3: # 3 dof
                 pass
             if x_out.shape[1] == 7: # single
-            for a in x_out:
-                b = ee_pose_target_single
-                pos_norm = np.linalg.norm(a[:3] - b[:3])
-                q1 = Quaternion(array=a[3:])
-                q2 = Quaternion(array=b[3:])
-                quat_norm = Quaternion.distance(q1,q2)
-                p_err.append(pos_norm)
-                q_err.append(quat_norm)
-            # for d in diff:
-            #     pos_norm = np.linalg.norm(d[:3])
-            #     quat_norm = np.linalg.norm(d[3:])
-                # print(pos_norm,quat_norm)
+                for a in x_out:
+                    b = ee_pose_target_single
+                    pos_norm = np.linalg.norm(a[:3] - b[:3])
+                    q1 = Quaternion(array=a[3:])
+                    q2 = Quaternion(array=b[3:])
+                    quat_norm = Quaternion.distance(q1,q2)
+                    p_err.append(pos_norm)
+                    q_err.append(quat_norm)
+                # for d in diff:
+                #     pos_norm = np.linalg.norm(d[:3])
+                #     quat_norm = np.linalg.norm(d[3:])
+                    # print(pos_norm,quat_norm)
             elif x_out.shape[1] == 14: # dual
                 for aa in x_out:
                     for i in range(2):    

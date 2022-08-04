@@ -162,7 +162,7 @@ class ODEfunc(nn.Module):
         c = states[1]
         
         # Refresh the odefunc statistics.
-        _t1 = time.time()
+        # _t1 = time.time()
 
         # increment num evals
         self._num_evals += 1
@@ -177,7 +177,7 @@ class ODEfunc(nn.Module):
             else:
                 self._e = sample_gaussian_like(y)
 
-        _t2 = time.time()
+        # _t2 = time.time()
 
         if self.calc_density:
             t = torch.ones(y.size(0), 1).to(y) * t.clone().detach().requires_grad_(True).type_as(y)
@@ -206,11 +206,12 @@ class ODEfunc(nn.Module):
             return tuple([dy, torch.zeros_like(c).requires_grad_(True), -divergence] + [torch.zeros_like(s_).requires_grad_(True) for s_ in states[3:]])
 
         else:
-            t = torch.ones(y.size(0), 1).to(y) * t.clone().detach().type_as(y)
-            tc = torch.cat([t, c.view(y.shape[0], -1)], dim=1)
-            dy = self.diffeq(tc, y, *states[3:])
-            divergence = torch.zeros_like(c[:,0])
+            with torch.no_grad():
+                t = torch.ones(y.size(0), 1).to(y) * t.clone()#.detach().type_as(y)
+                tc = torch.cat([t, c.view(y.shape[0], -1)], dim=1)
+                dy = self.diffeq(tc, y, *states[3:])
+                divergence = torch.zeros_like(c[:,0])
 
-            return tuple([dy, torch.zeros_like(c), -divergence] + [torch.zeros_like(s_) for s_ in states[3:]])
+                return tuple([dy, torch.zeros_like(c), -divergence] + [torch.zeros_like(s_) for s_ in states[3:]])
 
         # print('times:',(_t2-_t1)*1000,(_t3-_t2)*1000,(_t4-_t3)*1000)

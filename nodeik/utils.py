@@ -95,6 +95,8 @@ def build_model(args, dims, condition_dims, regularization_fns=[]):
             train_T=args.train_T,
             regularization_fns=regularization_fns,
             solver=args.solver,
+            atol=args.atol,
+            rtol=args.rtol,
         )
         return cnf
 
