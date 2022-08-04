@@ -28,7 +28,7 @@ def urdf_add_collision(builder, link, collisions, density, shape_ke, shape_kd, s
         origin = urdfpy.matrix_to_xyz_rpy(collision.origin)
 
         pos = origin[0:3]
-        rot = wp.rpy2quat(*origin[3:6])
+        rot = wp.quat_rpy(*origin[3:6])
 
         geo = collision.geometry
 
@@ -92,7 +92,7 @@ def urdf_add_collision(builder, link, collisions, density, shape_ke, shape_kd, s
                 # vertices = wp.array(vertices, dtype=wp.vec3, device=wp.get_preferred_device())
                 # faces = wp.array(faces, dtype=wp.int32, device=wp.get_preferred_device())
                 
-                mesh = wp.sim.model.Mesh(vertices, faces)
+                mesh = wp.sim.model.Mesh(vertices, faces, compute_inertia=False)
 
                 builder.add_shape_mesh(
                     link,
@@ -195,7 +195,7 @@ def parse_urdf(
 
         origin = urdfpy.matrix_to_xyz_rpy(joint.origin)
         pos = origin[0:3]
-        rot = wp.rpy2quat(*origin[3:6])
+        rot = wp.quat_rpy(*origin[3:6])
 
         lower = -1.e+3
         upper = 1.e+3

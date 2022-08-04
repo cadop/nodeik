@@ -6,7 +6,7 @@ import warp.sim.render
 from nodeik.warp.urdf_loader import parse_urdf
 
 class Robot():
-    def __init__(self, render=True, num_envs=1, device='cpu', robot_path='panda_arm.urdf',start_joint_index=0, end_joint_index=7):
+    def __init__(self, render=True, num_envs=1, device='cpu', robot_path='panda_arm.urdf',start_joint_index=0, end_joint_index=-1, ee_link_index=-1):
         builder = wp.sim.ModelBuilder()
 
         self.device = device
@@ -35,10 +35,14 @@ class Robot():
         self.device = device
 
         self.joint_dim = len(self.model.joint_q.numpy())
+
+        if end_joint_index == -1: end_joint_index = self.joint_dim
+
         self.start_joint_index = start_joint_index
         self.end_joint_index = end_joint_index
         self.joint_limit_lb = self.model.joint_limit_lower.numpy()[start_joint_index:end_joint_index]
         self.joint_limit_ub = self.model.joint_limit_upper.numpy()[start_joint_index:end_joint_index]
+        self.ee_link_index = ee_link_index
         
         self.state = self.model.state()
         joint_qdot = np.zeros(self.joint_dim)
@@ -54,7 +58,7 @@ class Robot():
             None,
             self.state)
 
-        x = self.state.body_q.numpy()[-1] # TODO: change here (target link index)
+        x = self.state.body_q.numpy()[self.ee_link_index] # TODO: change here (target link index)
         norm = np.linalg.norm(x)
         if norm > 10:
             print('something is wrong')
@@ -62,6 +66,20 @@ class Robot():
             print('x',x)
             print('self.state.body_q.numpy()',self.state.body_q.numpy())
             assert(norm > 10)
+        return x
+
+    def get_forward_kinematics_all(self, q):
+        self.model.joint_q = wp.array(q,device=self.device, dtype=float)
+        
+        wp.sim.eval_fk(
+            self.model,
+            self.model.joint_q,
+            self.model.joint_qd,
+            None,
+            self.state)
+
+        x = self.state.body_q.numpy()
+        
         return x
 
     def get_pair(self):
