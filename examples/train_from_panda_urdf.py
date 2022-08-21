@@ -1,12 +1,6 @@
 from dataclasses import dataclass
 
 import os
-# import pdb; # pdb.set_trace()
-
-os.environ['WANDB_API_KEY']='7fa46452ab048b6302357208d967486b045b4808'
-
-os.environ["WANDB_RESUME"] = "allow"
-os.environ['WANDB_RUN_ID'] = 'std=1-1024-4layers'
 
 import torch
 from torch.utils.data import DataLoader
@@ -35,18 +29,17 @@ class args:
     rtol = 1e-5
     gpu = 0
     rademacher = False
-    model_checkpoint = 'lightning_logs/epoch=195822-step=195823.ckpt'
     adjoint = True
 
 device = torch.device('cuda:' + str(args.gpu) if torch.cuda.is_available() else 'cpu')
 
 wp.init()
- 
+
 def get_robot(filepath):
 
     r = Robot(robot_path=filepath)
-    
-    val_size = 100
+
+    val_size = 256
     dataset = KinematicsDataset(r, len_batch=4096*500)
     val_dataset = KinematicsDataset(r, len_batch=val_size)
     dataloader = DataLoader(dataset, batch_size=4096)
@@ -61,16 +54,15 @@ def run():
     params = sum(p.numel() for p in model.parameters())
     print('parameters', params)
     learn = Learner(model, robot=r, std=1.0)
-    learn.model_wrapper.device = 'cuda:0'
-    # learn = Learner.load_from_checkpoint(args.model_checkpoint, model=model, robot=r, std=0.5)
-    #epoch=158400-step=158401.ckpt
+    learn.model_wrapper.device = device
 
-    wandb_logger = WandbLogger(project="node-ik", id='std=1-1024-4layers')#, log_model='all')
-    print(wandb_logger.version)
-    print(wandb_logger)
-    trainer = pl.Trainer(max_epochs=1000000000,accelerator='gpu', gpus=[0], logger=wandb_logger, check_val_every_n_epoch=1, log_every_n_steps=10, default_root_dir='/home/dyros/sh_ws/nodeik/checkpoints')
-    trainer.fit(learn,dataloader,val_dataloader,
-    ckpt_path='/home/dyros/sh_ws/nodeik/examples/node-ik/resume.ckpt')
+    trainer = pl.Trainer(max_epochs=1000000000,
+                         accelerator='gpu', 
+                         gpus=[args.gpu], 
+                         check_val_every_n_epoch=1, 
+                         log_every_n_steps=10, 
+                         default_root_dir=os.path.join(os.path.dirname(__file__), 'checkpoints'))
+    trainer.fit(learn,dataloader,val_dataloader)
 
 
 if __name__ == '__main__':
