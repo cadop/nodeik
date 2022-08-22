@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 import pytorch_lightning as pl
+import copy
 
 from nodeik.utils import standard_normal_logprob
 
@@ -28,19 +29,22 @@ class ModelWrapper:
         zero = torch.zeros(c.shape[0], 1).to(device)
         c = torch.from_numpy(c).to(device)
         x = torch.normal(mean=0.0, std=self.std, size=(c.shape[0],self.dim_x)).to(device)
-        # import pdb; pdb.set_trace()
+
         ik_q, delta_logp = self.model(x,c,zero, rev=True)
         ik_q = ik_q.cpu().detach().numpy()
 
         return ik_q, delta_logp
 
     def forward_kinematics(self, q):
-        # import pdb; pdb.set_trace()
         if len(q.shape) == 2:
             x = []
             for joint in q:
-                x.append(self.robot.get_forward_kinematics(joint))
+                x.append(copy.deepcopy(self.robot.get_forward_kinematics(joint)))
             x = np.array(x, dtype=np.float32)
         else:
             x = self.robot.get_forward_kinematics(q)  
         return x
+
+    def eval(self):
+        self.model.eval()
+        self.model.chain[0].odefunc.odefunc.calc_density = False
