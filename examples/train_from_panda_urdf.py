@@ -5,7 +5,6 @@ import os
 import torch
 from torch.utils.data import DataLoader
 import pytorch_lightning as pl
-from pytorch_lightning.loggers import WandbLogger
 
 from nodeik.utils import build_model
 
@@ -36,13 +35,14 @@ device = torch.device('cuda:' + str(args.gpu) if torch.cuda.is_available() else 
 wp.init()
 
 def get_robot(filepath):
+    r = Robot(robot_path=filepath, ee_link_name='panda_hand')
 
-    r = Robot(robot_path=filepath)
-
-    val_size = 256
-    dataset = KinematicsDataset(r, len_batch=4096*500)
+    batch_size = 512
+    batch_in_epoch = 500
+    val_size = 512
+    dataset = KinematicsDataset(r, len_batch=batch_size*batch_in_epoch)
     val_dataset = KinematicsDataset(r, len_batch=val_size)
-    dataloader = DataLoader(dataset, batch_size=4096)
+    dataloader = DataLoader(dataset, batch_size=batch_size)
     val_dataloader = DataLoader(val_dataset, batch_size=val_size)
     
     return r, dataloader, val_dataloader
@@ -50,10 +50,10 @@ def get_robot(filepath):
 def run():
     filepath = os.path.join(os.path.dirname(__file__), 'assets', 'robots','franka_panda', 'panda_arm.urdf')
     r, dataloader, val_dataloader = get_robot(filepath)
-    model = build_model(args, 7, condition_dims=7).to(device)
+    model = build_model(args, r.active_joint_dim, condition_dims=7).to(device)
     params = sum(p.numel() for p in model.parameters())
     print('parameters', params)
-    learn = Learner(model, robot=r, std=1.0)
+    learn = Learner(model, robot=r, std=1.0, num_samples=250, state_dim=r.active_joint_dim, condition_dim=7)
     learn.model_wrapper.device = device
 
     trainer = pl.Trainer(max_epochs=1000000000,
