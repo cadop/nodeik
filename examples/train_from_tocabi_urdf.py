@@ -36,7 +36,7 @@ wp.init()
 
 def get_robot(filepath):
     r = RobotDual(robot_path=filepath,
-                  ee1_link_name='L_Wrist1_Link', 
+                  ee1_link_name='L_Wrist2_Link', 
                   ee2_link_name='R_Wrist2_Link', 
                   joint_map=[12,13,14,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32])
 
