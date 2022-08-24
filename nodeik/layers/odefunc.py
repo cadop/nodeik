@@ -67,49 +67,24 @@ class ODEnet(nn.Module):
     """
 
     def __init__(
-        self, hidden_dims, input_shape, strides, conv, layer_type="concatsquash", nonlinearity="softplus", num_squeeze=0, dim_c = 7
+        self, hidden_dims, input_shape, conv, layer_type="concatsquash", nonlinearity="softplus", num_squeeze=0, dim_c = 7
     ):
         super(ODEnet, self).__init__()
         self.num_squeeze = num_squeeze
-        if conv:
-            assert len(strides) == len(hidden_dims) + 1
-            base_layer = {
-                "concatsquash": diffeq_layers.ConcatSquashConv2d
-            }[layer_type]
-        else:
-            strides = [None] * (len(hidden_dims) + 1)
-            base_layer = {
-                "concatsquash": diffeq_layers.ConcatSquashLinear
-            }[layer_type]
 
         # build layers and add them
         layers = []
         activation_fns = []
         hidden_shape = input_shape
 
-        for dim_out, stride in zip(hidden_dims + (input_shape[0],), strides):
-            if stride is None:
-                layer_kwargs = {}
-            elif stride == 1:
-                layer_kwargs = {"ksize": 3, "stride": 1, "padding": 1, "transpose": False}
-            elif stride == 2:
-                layer_kwargs = {"ksize": 4, "stride": 2, "padding": 1, "transpose": False}
-            elif stride == -2:
-                layer_kwargs = {"ksize": 4, "stride": 2, "padding": 1, "transpose": True}
-            else:
-                raise ValueError('Unsupported stride: {}'.format(stride))
-
-            layer = base_layer(hidden_shape[0], dim_out, dim_c=dim_c, **layer_kwargs)
+        for dim_out in zip(hidden_dims + (input_shape[0],)):
+            layer = diffeq_layers.ConcatSquashLinear(hidden_shape[0], dim_out, dim_c=dim_c, **layer_kwargs)
             layers.append(layer)
             activation_fns.append(NONLINEARITIES[nonlinearity])
 
             hidden_shape = list(copy.copy(hidden_shape))
             hidden_shape[0] = dim_out
-            if stride == 2:
-                hidden_shape[1], hidden_shape[2] = hidden_shape[1] // 2, hidden_shape[2] // 2
-            elif stride == -2:
-                hidden_shape[1], hidden_shape[2] = hidden_shape[1] * 2, hidden_shape[2] * 2
-
+            
         # print('[{0}]'.format(__name__), ': layers ', layers)
         self.layers = nn.ModuleList(layers)
         self.activation_fns = nn.ModuleList(activation_fns[:-1])

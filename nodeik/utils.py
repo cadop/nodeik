@@ -78,7 +78,6 @@ def build_model(args, dims, condition_dims, regularization_fns=[]):
         diffeq = layers.ODEnet(
             hidden_dims=hidden_dims,
             input_shape=(dims,),
-            strides=None,
             conv=False,
             layer_type=args.layer_type,
             nonlinearity=args.nonlinearity,
