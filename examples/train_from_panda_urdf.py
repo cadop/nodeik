@@ -57,8 +57,8 @@ def run():
     learn.model_wrapper.device = device
 
     trainer = pl.Trainer(max_epochs=1000000000,
-                         accelerator='gpu', 
-                         gpus=[args.gpu], 
+                         accelerator='gpu' if torch.cuda.is_available() else 'cpu', 
+                         gpus=[args.gpu] if torch.cuda.is_available() else None, 
                          check_val_every_n_epoch=1, 
                          log_every_n_steps=10, 
                          default_root_dir=os.path.join(os.path.dirname(__file__), 'checkpoints'))

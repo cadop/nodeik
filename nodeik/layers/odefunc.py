@@ -76,33 +76,25 @@ class ODEnet(nn.Module):
         layers = []
         activation_fns = []
         hidden_shape = input_shape
-
-        for dim_out in zip(hidden_dims + (input_shape[0],)):
-            layer = diffeq_layers.ConcatSquashLinear(hidden_shape[0], dim_out, dim_c=dim_c, **layer_kwargs)
+        for dim_out in hidden_dims + (input_shape[0],):
+            layer = diffeq_layers.ConcatSquashLinear(hidden_shape[0], dim_out, dim_c=dim_c)
             layers.append(layer)
             activation_fns.append(NONLINEARITIES[nonlinearity])
 
             hidden_shape = list(copy.copy(hidden_shape))
             hidden_shape[0] = dim_out
             
-        # print('[{0}]'.format(__name__), ': layers ', layers)
         self.layers = nn.ModuleList(layers)
         self.activation_fns = nn.ModuleList(activation_fns[:-1])
 
     def forward(self, tc, y):
         dx = y
-        # squeeze
-        # _t1 = time.time()
-        # _t2 = time.time()
         for l, layer in enumerate(self.layers):
             dx = layer(tc, dx)
-            # if not last layer, use nonlinearity
+            
             if l < len(self.layers) - 1:
                 dx = self.activation_fns[l](dx)
 
-        # _t3 = time.time()
-        # _t4 = time.time()
-        # print('sub times:',(_t2-_t1)*1000,(_t3-_t2)*1000,(_t4-_t3)*1000)
         return dx
 
 
