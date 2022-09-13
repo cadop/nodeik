@@ -6,6 +6,11 @@ import six
 import math
 import nodeik.layers as layers
 import torch
+import numpy as np
+
+from math import cos, inf, sin
+
+import warp as wp
 
 
 def isnan(tensor):
@@ -103,3 +108,41 @@ def build_model(args, dims, condition_dims, regularization_fns=[]):
     model = layers.SequentialFlow(chain)
 
     return model
+
+
+def is_path_continuous(qs):
+    thhold = 0.1
+    for i in range(1,len(qs)):
+        ifnorm = np.linalg.norm(qs[i] - qs[i-1],ord=inf) 
+        if ifnorm > thhold:
+            return False
+
+    return True
+
+def createDirectory(directory):
+    print(directory)
+    try:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+            print('diretory is created:',directory)
+    except OSError:
+        print("Error: Failed to create the directory.")
+
+def render(r, sub_dir, file_name, qs, dt):
+    """
+    r: Robot
+    sub_dir: Directory
+    file_name: Filename
+    qs: Q set
+    dt: delta time
+    """
+    createDirectory(f"{sub_dir}")
+    render_time = 0.0 
+    renderer = wp.sim.render.SimRenderer(r.model, "{}/{}.usd".format(sub_dir,file_name))
+    for q in qs:
+        r.get_forward_kinematics_all(q)
+        renderer.begin_frame(render_time)
+        renderer.render(r.state)
+        renderer.end_frame()
+        render_time += dt
+    renderer.save()

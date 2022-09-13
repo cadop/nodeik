@@ -15,7 +15,7 @@ class ModelWrapper:
         self.dim_c = dim_c
         self.dim_x = dim_x
 
-    def inverse_kinematics(self, pose, num_samples=1):
+    def inverse_kinematics(self, pose, num_samples=1, z=None):
         
         device = self.device
         # device = 'cuda:1'
@@ -28,11 +28,34 @@ class ModelWrapper:
 
         zero = torch.zeros(c.shape[0], 1).to(device)
         c = torch.from_numpy(c).to(device)
-        x = torch.normal(mean=0.0, std=self.std, size=(c.shape[0],self.dim_x)).to(device)
 
+        if z is None:
+            x = torch.normal(mean=0.0, std=self.std, size=(c.shape[0],self.dim_x)).to(device)
+        elif isinstance(z, float):
+            x = z * torch.ones(size=(c.shape[0], self.dim_x))
+        elif isinstance(z, np.ndarray):
+            if len(z.shape) == 2 and z.shape[0] != 1:
+                x = torch.from_numpy(z).float().to(device)
+                pass
+            elif len(z.shape) == 1 or (len(z.shape) == 2 and z.shape[0] == 1):
+                z_torch = torch.from_numpy(z).float().to(device)
+                x = z_torch.repeat(c.shape[0], 1)
+            else:
+                assert(False)
+        elif isinstance(z,torch.Tensor):
+            if len(z.shape) == 2 and z.shape[0] != 1:
+                z.float().to(device)
+                pass
+            elif len(z.shape) == 1 or (len(z.shape) == 2 and z.shape[0] == 1):
+                x = z.repeat(c.shape[0], 1)
+            else:
+                assert(False)
+
+        else:
+            assert(False)
+        
         ik_q, delta_logp = self.model(x,c,zero, rev=True)
         ik_q = ik_q.cpu().detach().numpy()
-
         return ik_q, delta_logp
 
     def forward_kinematics(self, q):
