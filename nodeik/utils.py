@@ -120,7 +120,6 @@ def is_path_continuous(qs):
     return True
 
 def createDirectory(directory):
-    print(directory)
     try:
         if not os.path.exists(directory):
             os.makedirs(directory)
