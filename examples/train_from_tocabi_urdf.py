@@ -26,11 +26,16 @@ class args:
     solver = 'dopri5'
     atol = 1e-5
     rtol = 1e-5
+    use_gpu = False
     gpu = 0
     rademacher = False
     adjoint = True
+    max_epoch = 1000000000
 
-device = torch.device('cuda:' + str(args.gpu) if torch.cuda.is_available() else 'cpu')
+if args.use_gpu:
+    device = torch.device('cuda:' + str(args.gpu) if torch.cuda.is_available() else 'cpu')
+else:
+    device = 'cpu'
 
 wp.init()
 
@@ -51,17 +56,26 @@ def get_robot(filepath):
     return r, dataloader, val_dataloader
 
 def run():
+    # URDF file path
     filepath = os.path.join(os.path.dirname(__file__), 'assets', 'robots','tocabi_description', 'dyros_tocabi.urdf')
+    
+    # Get robot object
     r, dataloader, val_dataloader = get_robot(filepath)
+
+    # Build a CNF model
     model = build_model(args, r.active_joint_dim, condition_dims=14).to(device) # , condition_dims=14 because dual target
     params = sum(p.numel() for p in model.parameters())
     print('parameters', params)
+
+    # Create a learner
     learn = Learner(model, robot=r, std=1.0, num_samples=250, state_dim=r.active_joint_dim, condition_dim=14)
     learn.model_wrapper.device = device
+    print('device', device)
 
-    trainer = pl.Trainer(max_epochs=1000000000,
-                         accelerator='gpu', 
-                         gpus=[args.gpu], 
+    # Training
+    trainer = pl.Trainer(max_epochs=args.max_epoch,
+                         accelerator='gpu' if device != 'cpu' else None, 
+                         gpus=[args.gpu] if device != 'cpu' else None, 
                          check_val_every_n_epoch=1, 
                          log_every_n_steps=10, 
                          default_root_dir=os.path.join(os.path.dirname(__file__), 'checkpoints'))
