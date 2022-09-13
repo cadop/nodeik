@@ -17,7 +17,7 @@ from nodeik.training.learner import Learner
 @dataclass
 class args:
     layer_type = 'concatsquash'
-    dims = '2048-2048-2048-2048'
+    dims = '1024-1024-1024-1024'
     num_blocks = 1 
     time_length = 0.5
     train_T = False
