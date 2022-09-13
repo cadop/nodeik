@@ -114,7 +114,7 @@ def run():
             render(r, 
                    os.path.join(os.path.dirname(__file__), 'tocabi_renders'), 
                    f'tocabi_{x_dist}_{y_dist}_{z_dist}_{radius}_{args.seed}_{t}', 
-                   ik_q, dt=1.0/5.0)
+                   ik_q, dt=args.dt)
 
 if __name__ == '__main__':
 
