@@ -12,6 +12,7 @@
 - usd-core
 - pytorch_lightning
 - pyquaternion
+- tqdm
 
 ## How to train
 The example training code can be found in `examples` directory.
@@ -21,7 +22,14 @@ python train_panda_urdf.py
 ```
 
 ## How to visualize the reuslt
-TBA
+The example visualization code can be found in `examples` directory.
+
+```sh
+cd examples
+python visualize_panda_urdf.py
+```
+
+This script creates `usd` files. [NVIDA Omniverse](https://developer.nvidia.com/nvidia-omniverse-platform) can open these files and you can see the generated visual results.
 
 ## How to evaluate the trained model
 The example evaluation code can be found in `examples` directory.
