@@ -2,6 +2,8 @@
 
 NODE IK is a python library for trajectory planning....
 
+# Installation
+
 ## Requirements
 - python >= 3.7
 - pytorch 1.0.1
@@ -14,6 +16,12 @@ NODE IK is a python library for trajectory planning....
 - pytorch_lightning
 - pyquaternion
 - tqdm
+
+This repo is tested on Ubuntu XXX and Windows?
+
+## Install
+
+Git clone the repo and run `pip install .`
 
 ## How to train
 The example training code can be found in `examples` directory.
