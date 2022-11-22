@@ -1,5 +1,6 @@
 # NODE IK: Neural ODE Inverse Kinematics
 
+NODE IK is a python library for trajectory planning....
 
 ## Requirements
 - python >= 3.7
@@ -43,6 +44,8 @@ The model checkpoint can be designated by modifying `args`.
 
 
 # Credits
+
+If you find this repository useful, please cite:
 
 ```bibtex
 @article{suhaniccas,
