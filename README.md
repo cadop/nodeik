@@ -1,5 +1,8 @@
 # NODE IK: Neural ODE Inverse Kinematics
 
+NODE IK is a python library for trajectory planning....
+
+# Installation
 
 ## Requirements
 - python >= 3.7
@@ -13,6 +16,12 @@
 - pytorch_lightning
 - pyquaternion
 - tqdm
+
+This repo is tested on Ubuntu XXX and Windows?
+
+## Install
+
+Git clone the repo and run `pip install .`
 
 ## How to train
 The example training code can be found in `examples` directory.
@@ -40,6 +49,24 @@ python evaluation_panda_urdf.py
 ```
 
 The model checkpoint can be designated by modifying `args`.
+
+
+# Credits
+
+If you find this repository useful, please cite:
+
+```bibtex
+@article{suhaniccas,
+  title={NODEIK},
+  author={},
+  journal={ICCAS},
+  volume={127},
+  pages={103557},
+  year={2021},
+  publisher={Elsevier}
+}
+```
+
 
 ## References
 `nodeik/layers` are orignated from `FFJORD` and `SoftFlow` repos. Thank the authors for these codes.
