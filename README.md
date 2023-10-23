@@ -14,6 +14,18 @@
 - pyquaternion
 - tqdm
 
+### Version Numbers
+As of 2023, some breaking changes have happened. 
+
+Install:
+- `pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113`
+- `numpy==1.22.3`
+- `pytorch_lightning==1.5.10`
+- `warp-lang==0.2.3`
+
+### Git LFS
+We use git lfs to reduce the `dae` file size on clone. Please install git lfs before cloning the repo. Otherwise install after and use git lfs fetch. 
+
 ## How to train
 The example training code can be found in `examples` directory.
 ```sh
