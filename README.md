@@ -53,6 +53,21 @@ python evaluation_panda_urdf.py
 
 The model checkpoint can be designated by modifying `args`.
 
+# Credits
+
+If you find this repository useful, please cite:
+
+```bibtex
+@inproceedings{park2022nodeik,
+  title={NODEIK: Solving Inverse Kinematics with Neural Ordinary Differential Equations for Path Planning},
+  author={Park, Suhan and Schwartz, Mathew and Park, Jaeheung},
+  booktitle={2022 22nd International Conference on Control, Automation and Systems (ICCAS)},
+  pages={944--949},
+  year={2022},
+  organization={IEEE}
+}
+```
+
 ## References
 `nodeik/layers` are orignated from `FFJORD` and `SoftFlow` repos. Thank the authors for these codes.
 - FFJORD: https://github.com/rtqichen/ffjord
